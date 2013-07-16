@@ -53,7 +53,7 @@ class YardocCommand(sublime_plugin.TextCommand):
 
     def get_author(self):
         author = "${1:[author]}"
-        return ["# ", "# @author " + author, "# "]
+        return ["#", "# @author " + author, "# "]
 
     def line_ending(self):
         ending = "\n"
@@ -76,12 +76,12 @@ class YardocCommand(sublime_plugin.TextCommand):
             indent = " " * (len(indent) - col)
 
         method_name = re.search("def (?P<name>[a-zA-Z_]+|[a-zA-Z_]+[!|?])(?P<params>[(| ][a-zA-Z,]+|)", current_line).group("name")
-        lines = [indent + "# ", "# ${1:[%s description]}" % (method_name)]
+        lines = [indent + "#", "# ${1:[%s description]}" % (method_name)]
 
         for param in params:
             lines.append("# @param  %s [${1:type}] ${1:[description]}" % (param))
 
-        lines.append("# ")
+        lines.append("#")
         lines.append("# @return [${1:type}] ${1:[description]}")
 
         return self.format_lines(indent, lines)
@@ -93,7 +93,7 @@ class YardocCommand(sublime_plugin.TextCommand):
         if(col != 0):
             indent = " " * (len(indent) - col)
 
-        lines = [indent + "# ", "# ${1:[ module description]}"]
+        lines = [indent + "#", "# ${1:[ module description]}"]
         lines.extend(self.get_author())
         return self.format_lines(indent, lines)
 
@@ -104,7 +104,7 @@ class YardocCommand(sublime_plugin.TextCommand):
         if(col != 0):
             indent = " " * (len(indent) - col)
 
-        lines = [indent + "# ", "# ${1:[ class description]}"]
+        lines = [indent + "#", "# ${1:[ class description]}"]
         lines.extend(self.get_author())
         return self.format_lines(indent, lines)
 
@@ -135,5 +135,5 @@ class AddhashtagCommand(YardocCommand):
         if not re.search("source\\.ruby", scope):
             self.view.insert(edit, point, ending)
             return
-        line = ending + "# "
+        line = ending + "#"
         self.write(self.view, line)
