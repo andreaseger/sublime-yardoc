@@ -3,6 +3,7 @@ Sublime Yardoc
 by Revath S Kumar
 https://github.com/revathskumar/sublime-yardoc
 """
+import sublime
 import sublime_plugin
 import re
 
@@ -31,17 +32,32 @@ class YardocCommand(sublime_plugin.TextCommand):
             }
         )
 
+    def reset_cursor(self, point, force=False):
+        self.view.sel().clear()
+        if (self.view.rowcol(point)[0] == self.view.rowcol(point + 1)[0]) or force:
+            self.view.sel().add(sublime.Region(self.point - 1))
+        else:
+            self.view.sel().add(sublime.Region(self.point))
+
     def run(self, edit):
         point = self.view.sel()[0].end()
+        self.point = self.view.text_point(self.view.rowcol(point)[0],0)
         scope = self.view.scope_name(point)
         if not re.search("source\\.ruby", scope):
             self.view.insert(edit, point, self.line_ending())
             return
-        line = self.read_line(point + 1)
-        if not self.check_doc(point):
+        if not self.check_doc(self.point):
             self.view.insert(edit, point, self.line_ending())
             return
+        line = self.read_line(point + 1)
         doc = self.compose_doc(line, edit)
+        self.reset_cursor(point)
+        if None == doc:
+            # we were maybe at the end of a valid line, run it here again
+            line = self.read_line(point)
+            doc = self.compose_doc(line, edit)
+            self.reset_cursor(point,True)
+
         self.write(self.view, doc)
 
     def check_doc(self, point):
@@ -70,7 +86,7 @@ class YardocCommand(sublime_plugin.TextCommand):
         params = [p.strip() for p in params_match.group(1).split(',') if len(p.strip()) > 0]
 
         indent = re.search('(^ *)', current_line).group(0)
-        col = self.view.rowcol(self.view.sel()[0].end())[1]
+        col = self.view.rowcol(self.point)[1]
 
         if(col != 0):
             indent = " " * (len(indent) - col)
